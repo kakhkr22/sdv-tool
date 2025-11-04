@@ -191,7 +191,6 @@ mark {
   <label>気力:
     <select id="ki">
       <option value="">全て</option>
-      <option value="1">1以上</option>
       <option value="2">2以上</option>
       <option value="3">3以上</option>
     </select>
@@ -302,7 +301,7 @@ function displayCards(cards, keyword=""){
 }
 
 // 絞り込み処理
-function applyFilters(){
+function applyFilters() {
   const kw = document.getElementById("keyword").value.trim().toLowerCase();
   const series = document.getElementById("series").value;
   const rarity = document.getElementById("rarity").value;
@@ -313,20 +312,52 @@ function applyFilters(){
   const ki = document.getElementById("ki").value;
   const en = document.getElementById("energy").value;
 
-  let filtered = allCardsData.filter(c=>{
-    if(kw && !Object.values(c).some(v=>v && v.toString().toLowerCase().includes(kw))) return false;
-    if(series && getSeriesNumber(c["カード番号"]) !== Number(series)) return false;
-    if(rarity && c["レアリティ"] !== rarity) return false;
-    if(bt && c["バトルタイプ"] !== bt) return false;
-    if(as && c["攻撃スタイル"] !== as) return false;
-    if(tf1 && !(c["変身状態"]||"").toLowerCase().includes(tf1)) return false;
-    if(tf2 && !(c["変身状態（覚醒後）"]||"").toLowerCase().includes(tf2)) return false;
-    if(ki && Number(c["気力"]) < Number(ki)) return false;
-    if(en && Number(c["必殺技必要エナジー"]) !== Number(en)) return false;
-    return true;
+  let filtered = allCardsData.filter(c => {
+    if (kw && !Object.values(c).some(v => v && v.toString().toLowerCase().includes(kw))) return false;
+    if (series && getSeriesNumber(c["カード番号"]) !== Number(series)) return false;
+    if (rarity && c["レアリティ"] !== rarity) return false;
+    if (bt && c["バトルタイプ"] !== bt) return false;
+    if (as && c["攻撃スタイル"] !== as) return false;
+    if (tf1 && !(c["変身状態"] || "").toLowerCase().includes(tf1)) return false;
+    if (tf2 && !(c["変身状態（覚醒後）"] || "").toLowerCase().includes(tf2)) return false;
+    if (ki && Number(c["気力"]) < Number(ki)) return false;
+
+// 🔹 エナジー条件（完全対応版）
+if (en) {
+  const energyRaw = c["エナジー"] ? c["エナジー"].toString() : "";
+  const normalized = energyRaw
+    .trim()
+    .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248)) // 全角→半角
+    .replace(/[^\d~以上]/g, ""); // 「以上」を残す
+
+  const numEn = parseInt(en);
+  const match = (() => {
+    if (!normalized) return false;
+    if (normalized.includes("~")) {
+      const [min, max] = normalized.split("~").map(v => parseInt(v));
+      return numEn >= min && numEn <= max;
+    }
+    if (normalized.includes("以上")) {
+      const base = parseInt(normalized.replace("以上", ""));
+      return numEn >= base;
+    }
+    const energyNum = parseInt(normalized);
+    if (isNaN(energyNum)) return false;
+    return energyNum === numEn;
+  })();
+
+  if (!match) return false;
+}
+
+
+
+    return true; // ✅ ← ここが大事！
   });
+
   displayCards(filtered, kw);
 }
+
+
 
 // クリア処理
 function clearFilters(){
