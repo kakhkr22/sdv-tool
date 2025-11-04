@@ -143,13 +143,6 @@ select, input[type="text"], input[type="number"] {
 
 <h1>SDV 戦闘力計算ツール</h1>
 
-<!-- 🔹 トップページに戻るボタンを追加 -->
-<p>
-  <a href="index.html">
-    <button id="backBtn">← カード検索ツールに戻る</button>
-  </a>
-</p>
-
 <div class="top-grid">
   <!-- アバター -->
   <div id="avatar" class="card-select bg-ラッシュ">
@@ -180,6 +173,7 @@ select, input[type="text"], input[type="number"] {
     <div id="errorMsg"></div>
     <div id="resultPower">合計戦闘力: 0</div>
     <div id="resultHP">合計HP: 0</div>
+    <div id="breakdownTitle">内訳</div>
     <div id="breakdown">アバター: 戦闘力 0 ／ HP 0</div>
   </div>
 </div>
@@ -189,7 +183,7 @@ select, input[type="text"], input[type="number"] {
 <!-- 3段目（3枚） -->
 <div id="row2" class="card-grid"></div>
 
-<script src="card1.js"></script>
+<script src="card.js"></script>
 <script>
 /* ===== ユーティリティ ===== */
 function getSeriesNumber(cardNo){
@@ -396,5 +390,28 @@ function calcPower(){
 /* ===== 起動 ===== */
 window.onload = () => { createSelects(); calcPower(); };
 </script>
+<!-- ===== カードデータ読込順を修正 ===== -->
+<script src="card1.js"></script>
+<script src="card2.js"></script>
+<script src="card3.js"></script>
+<script src="card4.js"></script>
+<script src="card5.js"></script>
+<script src="card6.js"></script>
+
+<script>
+  const allCardsData = [
+    ...(typeof cardData1 !== 'undefined' ? cardData1 : []),
+    ...(typeof cardData2 !== 'undefined' ? cardData2 : []),
+    ...(typeof cardData3 !== 'undefined' ? cardData3 : []),
+    ...(typeof cardData4 !== 'undefined' ? cardData4 : []),
+    ...(typeof cardData5 !== 'undefined' ? cardData5 : []),
+    ...(typeof cardData6 !== 'undefined' ? cardData6 : []),
+  ];
+  window.allCardsData = allCardsData;
+</script>
+
+<!-- ===== メイン処理を最後に実行 ===== -->
+<script src="main.js"></script>
 </body>
 </html>
+

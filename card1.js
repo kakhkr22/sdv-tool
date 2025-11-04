@@ -1750,3 +1750,6 @@ const cardData1 = [
 ブースト   → 薄い緑   #e8ffe8
 リミテッド → グレー   #f4f4f4
 */
+
+window.allCards = (window.allCards || []).concat(cardData1);
+
