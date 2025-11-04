@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>SDV カード検索ツール</title>
+<title>【非公式】 SDV カード検索</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 body {
@@ -129,14 +129,33 @@ mark {
 </head>
 <body>
 
-<h1>【非公式】SDV カード検索ツール</h1>
+<h1>【非公式】 SDV カード検索</h1>
 
-<!-- 🔹 ここにバトル計算ツールへのリンクボタンを追加 -->
+<!-- 🔹 ここに戦闘力計算へのリンクボタンを追加 -->
 <p>
-  <a href="battle.html">
-    <button id="battleBtn">⚔️ バトル計算ツールへ</button>
-  </a>
-</p>
+<a href="battle.html" class="cute-blue-link">戦闘力計算へ →</a>
+
+<style>
+.cute-blue-link {
+  display: inline-block;
+  background-color: #e3f2fd; /* 淡いスカイブルー */
+  color: #1976d2; /* 濃い青文字 */
+  padding: 8px 18px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.25s;
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.25);
+}
+
+.cute-blue-link:hover {
+  background-color: #bbdefb; /* 少し濃く */
+  color: #fff; /* 白文字 */
+  box-shadow: 0 3px 10px rgba(33, 150, 243, 0.4);
+  transform: scale(1.05);
+}
+</style>
+
 
 <div id="filter">
   <label>キーワード:

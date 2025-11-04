@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>SDV 戦闘力計算ツール</title>
+<title>SDV 戦闘力計算</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 /* ===== ベース ===== */
@@ -15,9 +15,10 @@ body {
   padding: 20px;
 }
 h1 {
-  font-size: 26px;
+  font-size: 30px;
   color: #444;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  font-weight: 800;
 }
 
 /* ===== 上段：アバター＋結果 ===== */
@@ -141,7 +142,50 @@ select, input[type="text"], input[type="number"] {
 </head>
 <body>
 
-<h1>SDV 戦闘力計算ツール</h1>
+<h1>SDV 戦闘力計算</h1>
+
+<!-- 🔹 ここにバトル計算ツールへのリンクボタンを追加 -->
+<p>
+<a href="index.html" class="cute-blue-link">← カード検索へ戻る</a>
+
+<style>
+.cute-blue-link {
+  display: inline-block;
+  background-color: #e3f2fd; /* 淡いスカイブルー */
+  color: #1976d2; /* 濃い青文字 */
+  padding: 8px 18px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.25s;
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.25);
+}
+
+.cute-blue-link:hover {
+  background-color: #bbdefb; /* 少し濃く */
+  color: #fff; /* 白文字 */
+  box-shadow: 0 3px 10px rgba(33, 150, 243, 0.4);
+  transform: scale(1.05);
+}
+</style>
+
+</p>
+<style>
+.cute-title {
+  font-family: "Poppins", "Noto Sans JP", sans-serif;
+  color: #ff69b4; /* ピンク */
+  background: #fff0f5; /* 薄いピンク背景 */
+  display: inline-block;
+  padding: 12px 25px;
+  border-radius: 25px;
+  box-shadow: 0 3px 8px rgba(255, 182, 193, 0.4);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 3px rgba(255,255,255,0.8);
+  margin-bottom: 20px;
+}
+</style>
 
 <div class="top-grid">
   <!-- アバター -->
