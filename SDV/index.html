@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SDV カード検索ツール</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  font-family: "Poppins", "Noto Sans JP", sans-serif;
+  background: #f6f9fc;
+  color: #333;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+h1 {
+  font-size: 30px;
+  color: #444;
+  margin-bottom: 25px;
+  font-weight: 800;
+}
+#filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 18px 22px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  margin-bottom: 25px;
+}
+label { font-size: 14px; color: #444; }
+select, input[type="text"] {
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9fc;
+  transition: 0.2s;
+}
+select:focus, input[type="text"]:focus {
+  outline: none;
+  border-color: #6ca0dc;
+  box-shadow: 0 0 5px rgba(108,160,220,0.3);
+}
+#searchBtn, #clearBtn {
+  padding: 8px 18px;
+  font-size: 15px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+#searchBtn {
+  background: linear-gradient(135deg, #ffe6ef, #ffd8e6);
+  color: #333;
+  box-shadow: 0 3px 8px rgba(255,170,190,0.25);
+}
+#clearBtn {
+  background: linear-gradient(135deg, #e6f3ff, #d7ebff);
+  color: #333;
+  box-shadow: 0 3px 8px rgba(150,180,255,0.25);
+}
+#searchBtn:hover, #clearBtn:hover { transform: scale(1.05); }
+#cardContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1300px;
+  margin: auto;
+}
+.card {
+  width: 260px;
+  margin: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(240,240,240,0.9);
+  backdrop-filter: blur(8px);
+  text-align: left;
+  transition: transform 0.25s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+.card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+.card strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+}
+.meta small {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+}
+mark {
+  background: #cce5ff;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+.no-results {
+  width: 100%;
+  text-align: center;
+  color: #777;
+  padding: 20px;
+}
+#disclaimer {
+  margin-top: 40px;
+  padding: 20px 12px;
+  background: rgba(255,255,255,0.75);
+  border-top: 1px solid #e6e6e6;
+  color: #666;
+  font-size: 12px;
+}
+.ラッシュ   { background-color: #fff8e1; }   /* 薄い黄色 */
+.インパクト { background-color: #e9f4ff; }   /* 薄い青 */
+.ブースト   { background-color: #e8ffe8; }   /* 薄い緑 */
+.リミテッド { background-color: #f4f4f4; }   /* グレー */
+
+</style>
+</head>
+<body>
+
+<h1>【非公式】SDV カード検索ツール</h1>
+
+<div id="filter">
+  <label>キーワード:
+    <input type="text" id="keyword" placeholder="名前・スキル・番号など">
+  </label>
+  <label>収録弾:
+    <select id="series">
+      <option value="">全て</option>
+      <option value="1">1弾</option>
+      <option value="2">2弾</option>
+      <option value="3">3弾</option>
+      <option value="4">4弾</option>
+      <option value="5">5弾</option>
+      <option value="6">6弾</option>
+    </select>
+  </label>
+  <label>レアリティ:
+    <select id="rarity">
+      <option value="">全て</option>
+      <option value="N">N</option>
+      <option value="R">R</option>
+      <option value="SR">SR</option>
+      <option value="GDR">GDR</option>
+      <option value="PUR">PUR</option>
+      <option value="SEC">SEC</option>
+      <option value="EXR">EXR</option>
+      <option value="PR">PR</option>
+    </select>
+  </label>
+  <label>バトルタイプ:
+    <select id="battleType">
+      <option value="">全て</option>
+      <option value="ラッシュ">ラッシュ</option>
+      <option value="インパクト">インパクト</option>
+      <option value="ブースト">ブースト</option>
+      <option value="リミテッド">リミテッド</option>
+    </select>
+  </label>
+  <label>攻撃スタイル:
+    <select id="attackStyle">
+      <option value="">全て</option>
+      <option value="打撃">打撃</option>
+      <option value="気弾">気弾</option>
+    </select>
+  </label>
+  <label>状態:
+    <input type="text" id="transform" placeholder="例: 通常">
+  </label>
+  <label>状態（覚醒後）:
+    <input type="text" id="transform2" placeholder="例: 超サイヤ人">
+  </label>
+  <label>気力:
+    <select id="ki">
+      <option value="">全て</option>
+      <option value="1">1以上</option>
+      <option value="2">2以上</option>
+      <option value="3">3以上</option>
+    </select>
+  </label>
+  <label>エナジー:
+    <select id="energy">
+      <option value="">全て</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
+    </select>
+  </label>
+ <div>
+ 
+ 
+   <div class="filter-row">
+    <button id="searchBtn">検索</button>
+    <button id="clearBtn">クリア</button>
+  </div>
+
+<p id="count" style="color:#666;margin-bottom:10px;font-size:14px;">表示中: 0枚</p>
+<div id="cardContainer">読み込み中…</div>
+
+<footer id="disclaimer">
+  本サイトはファンによる非公式ツールです。<br>
+  「ドラゴンボール スーパーダイバーズ」および関連名称は各権利者に帰属します。
+</footer>
+
+<!-- 各弾のデータ読み込み -->
+<script src="card1.js"></script>
+<script src="card2.js"></script>
+<script src="card3.js"></script>
+<script src="card4.js"></script>
+<script src="card5.js"></script>
+<script src="card6.js"></script>
+
+<script>
+let allCardsData = [];
+
+window.onload = () => {
+  // 全カード統合
+  allCardsData = []
+    .concat(
+      (typeof cardData1!=="undefined"?cardData1:[]),
+      (typeof cardData2!=="undefined"?cardData2:[]),
+      (typeof cardData3!=="undefined"?cardData3:[]),
+      (typeof cardData4!=="undefined"?cardData4:[]),
+      (typeof cardData5!=="undefined"?cardData5:[]),
+      (typeof cardData6!=="undefined"?cardData6:[])
+    );
+  displayCards(allCardsData);
+  document.getElementById("searchBtn").onclick = applyFilters;
+  document.getElementById("clearBtn").onclick = clearFilters;
+  document.addEventListener("keydown", e => { if(e.key==="Enter") applyFilters(); });
+};
+
+// 弾数判定
+function getSeriesNumber(cardNo){
+  if(!cardNo) return null;
+  const s = cardNo.toUpperCase();
+  if(s.startsWith("SDV1")||s.startsWith("EX1")) return 1;
+  if(s.startsWith("SDV2")||s.startsWith("EX2")) return 2;
+  if(s.startsWith("SDV3")||s.startsWith("EX3")) return 3;
+  if(s.startsWith("SDV4")||s.startsWith("EX4")) return 4;
+  if(s.startsWith("SDV5")||s.startsWith("EX5")) return 5;
+  if(s.startsWith("SDV6")||s.startsWith("EX6")) return 6;
+  return null;
+}
+
+// ハイライト関数
+function highlightText(text, keyword){
+  if(!keyword || keyword.length < 2) return text;
+  const regex = new RegExp(keyword, "gi");
+  return text.replace(regex, match => `<mark>${match}</mark>`);
+}
+
+// カード表示
+function displayCards(cards, keyword=""){
+  const container = document.getElementById("cardContainer");
+  const count = document.getElementById("count");
+  container.innerHTML = "";
+  count.textContent = `表示中: ${cards.length}枚`;
+  if(!cards.length){
+    container.innerHTML = '<div class="no-results">該当するカードがありません。</div>';
+    return;
+  }
+
+  cards.forEach(c=>{
+    const div = document.createElement("div");
+    div.className = "card " + (c["バトルタイプ"] || "");
+    div.innerHTML = `
+      <strong>${highlightText(`${c["カード番号"]||""} ${c["カード名"]||""}`, keyword)}</strong>
+      <div class="meta">
+         ${Object.entries(c)
+      .filter(([k]) => !["URL", "カード番号", "カード名"].includes(k))
+      .map(([k,v]) => `<small>${highlightText(`${k}: ${v||"—"}`, keyword)}</small>`)
+      .join("")}
+      </div>`;
+    if(c["URL"]) div.onclick = ()=>window.open(c["URL"],"_blank");
+    container.appendChild(div);
+  });
+}
+
+// 絞り込み処理
+function applyFilters(){
+  const kw = document.getElementById("keyword").value.trim().toLowerCase();
+  const series = document.getElementById("series").value;
+  const rarity = document.getElementById("rarity").value;
+  const bt = document.getElementById("battleType").value;
+  const as = document.getElementById("attackStyle").value;
+  const tf1 = document.getElementById("transform").value.trim().toLowerCase();
+  const tf2 = document.getElementById("transform2").value.trim().toLowerCase();
+  const ki = document.getElementById("ki").value;
+  const en = document.getElementById("energy").value;
+
+  let filtered = allCardsData.filter(c=>{
+    if(kw && !Object.values(c).some(v=>v && v.toString().toLowerCase().includes(kw))) return false;
+    if(series && getSeriesNumber(c["カード番号"]) !== Number(series)) return false;
+    if(rarity && c["レアリティ"] !== rarity) return false;
+    if(bt && c["バトルタイプ"] !== bt) return false;
+    if(as && c["攻撃スタイル"] !== as) return false;
+    if(tf1 && !(c["変身状態"]||"").toLowerCase().includes(tf1)) return false;
+    if(tf2 && !(c["変身状態（覚醒後）"]||"").toLowerCase().includes(tf2)) return false;
+    if(ki && Number(c["気力"]) < Number(ki)) return false;
+    if(en && Number(c["必殺技必要エナジー"]) !== Number(en)) return false;
+    return true;
+  });
+  displayCards(filtered, kw);
+}
+
+// クリア処理
+function clearFilters(){
+  document.querySelectorAll("#filter select, #filter input").forEach(el => el.value = "");
+  displayCards(allCardsData);
+}
+</script>
+</body>
+</html>

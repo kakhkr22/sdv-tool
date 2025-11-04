@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SDV 戦闘力計算ツール</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ===== ベース ===== */
+body {
+  font-family: "Poppins", "Noto Sans JP", sans-serif;
+  background: #f6f9fc;
+  color: #333;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+h1 {
+  font-size: 26px;
+  color: #444;
+  margin-bottom: 20px;
+}
+
+/* ===== 上段：アバター＋結果 ===== */
+.top-grid {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.card-select, .result-box {
+  width: 280px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.card-select h4 {
+  font-size: 14px;
+  color: #444;
+  margin: 4px 0 8px;
+}
+#avatar { text-align: center; }
+
+/* 入力スタイル（角丸・統一） */
+select, input[type="text"], input[type="number"] {
+  width: 80%;
+  margin: 6px auto;
+  display: block;
+  padding: 6px 7px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.hp-input { width: 56%; }
+
+/* 結果ボックス */
+.result-box {
+  text-align: left;
+}
+#resultPower, #resultHP {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+#resultPower { color: #0a5aa5; }
+#resultHP    { color: #0a7a55; }
+#breakdownTitle {
+  margin: 10px 0 6px;
+  font-weight: 700;
+  color: #555;
+  border-top: 1px dashed #ddd;
+  padding-top: 8px;
+}
+#breakdown {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-line; /* 改行維持 */
+}
+
+/* エラーメッセージ（重複） */
+#errorMsg {
+  color: #d33;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+/* ===== 下段：カード選択 4 + 3 ===== */
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.card-box {
+  width: 260px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  transition: box-shadow .2s ease, border .2s ease;
+  text-align: center;
+}
+.card-box h4 {
+  font-size: 14px;
+  margin: 0 0 8px;
+  color: #444;
+}
+.card-box label {
+  display: block;
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+}
+.status, .power {
+  font-size: 12px;
+  color: #555;
+}
+.power { font-weight: 700; color: #0a5aa5; }
+
+/* 重複強調 */
+.duplicate { border: 2px solid #ff4d4d; }
+
+/* バトルタイプ背景（カード選択とアバター） */
+.bg-ラッシュ   { background-color: #fff8e1; }
+.bg-インパクト { background-color: #e9f4ff; }
+.bg-ブースト   { background-color: #e8ffe8; }
+.bg-リミテッド { background-color: #f4f4f4; }
+
+@media (max-width: 720px){
+  .card-select, .result-box { width: 100%; max-width: 360px; }
+  .card-box { width: 100%; max-width: 320px; }
+}
+</style>
+</head>
+<body>
+
+<h1>SDV 戦闘力計算ツール</h1>
+
+<div class="top-grid">
+  <!-- アバター -->
+  <div id="avatar" class="card-select bg-ラッシュ">
+    <h4>アバター</h4>
+    <label>HP</label>
+    <input type="number" id="avatarHP" class="hp-input" min="0" max="9999" placeholder="0000" oninput="calcPower()">
+    <label>気力</label>
+    <select id="avatarKi" onchange="calcPower()">
+      <option value="1">1.0</option>
+      <option value="1.2">1.2</option>
+      <option value="1.4">1.4</option>
+      <option value="1.6">1.6</option>
+      <option value="1.8">1.8</option>
+      <option value="2">2.0</option>
+    </select>
+    <label>タイプ</label>
+    <select id="avatarType" onchange="changeBg(this.value,'avatar'); calcPower();">
+      <option value="ラッシュ">ラッシュ</option>
+      <option value="インパクト">インパクト</option>
+      <option value="ブースト">ブースト</option>
+      <option value="リミテッド">リミテッド</option>
+    </select>
+    <div id="avatarPower" class="power" style="margin-top:6px;">戦闘力: 0</div>
+  </div>
+
+  <!-- 合計結果＆内訳 -->
+  <div class="result-box">
+    <div id="errorMsg"></div>
+    <div id="resultPower">合計戦闘力: 0</div>
+    <div id="resultHP">合計HP: 0</div>
+    <div id="breakdown">アバター: 戦闘力 0 ／ HP 0</div>
+  </div>
+</div>
+
+<!-- 2段目（4枚） -->
+<div id="row1" class="card-grid"></div>
+<!-- 3段目（3枚） -->
+<div id="row2" class="card-grid"></div>
+
+<script src="card1.js"></script>
+<script>
+/* ===== ユーティリティ ===== */
+function getSeriesNumber(cardNo){
+  if(!cardNo) return null;
+  const s = cardNo.toUpperCase();
+  if(s.startsWith("SDV1")||s.startsWith("EX1")) return 1;
+  if(s.startsWith("SDV2")||s.startsWith("EX2")) return 2;
+  if(s.startsWith("SDV3")||s.startsWith("EX3")) return 3;
+  if(s.startsWith("SDV4")||s.startsWith("EX4")) return 4;
+  if(s.startsWith("SDV5")||s.startsWith("EX5")) return 5;
+  if(s.startsWith("SDV6")||s.startsWith("EX6")) return 6;
+  return null;
+}
+function changeBg(type, id){
+  const el = document.getElementById(id);
+  el.className = el.className.replace(/\bbg-\S+/g, '').trim(); // 既存bg-クラスを除去
+  el.classList.add(`bg-${type}`);
+}
+
+/* ===== 初期配置（カード選択 7枚）===== */
+function createSelects(){
+  const row1 = document.getElementById("row1");
+  const row2 = document.getElementById("row2");
+  row1.innerHTML = ""; row2.innerHTML = "";
+  for(let i=1;i<=7;i++){
+    const box = document.createElement("div");
+    box.className = "card-box";
+    box.id = `cardDiv${i}`;
+    box.innerHTML = `
+      <h4 id="cardTitle${i}">カード${i}</h4>
+
+      <label>弾数</label>
+      <select id="series${i}" onchange="updateCardOptions(${i})">
+        <option value="">全て</option>
+        ${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n}弾</option>`).join('')}
+      </select>
+
+      <label>バトルタイプ</label>
+      <select id="type${i}" onchange="updateCardOptions(${i})">
+        <option value="">全て</option>
+        ${["ラッシュ","インパクト","ブースト","リミテッド"].map(t=>`<option value="${t}">${t}</option>`).join('')}
+      </select>
+
+      <label>カード名／番号 検索</label>
+      <input type="text" id="search${i}" placeholder="例：孫悟空, SDV1-001" oninput="filterByName(${i})">
+
+      <label>カードを選択</label>
+      <select id="card${i}" onchange="updateCardStatus(${i})">
+        <option value="">カードを選択</option>
+      </select>
+
+      <div id="status${i}" class="status"></div>
+      <div id="power${i}" class="power"></div>
+    `;
+    (i<=4 ? row1 : row2).appendChild(box);
+    updateCardOptions(i);
+  }
+}
+
+/* ===== カード候補の更新＆検索 ===== */
+function updateCardOptions(i){
+  const s = document.getElementById(`series${i}`).value;
+  const t = document.getElementById(`type${i}`).value;
+  const select = document.getElementById(`card${i}`);
+  const keyword = (document.getElementById(`search${i}`).value||"").trim().toLowerCase();
+
+  let filtered = allCardsData.filter(c=>{
+    const sn = getSeriesNumber(c["カード番号"]);
+    if(s && sn !== Number(s)) return false;
+    if(t && c["バトルタイプ"] !== t) return false;
+    if(keyword){
+      const k = keyword;
+      const nm = (c["カード名"]||"").toLowerCase().includes(k);
+      const no = (c["カード番号"]||"").toLowerCase().includes(k);
+      if(!nm && !no) return false;
+    }
+    return true;
+  });
+
+  select.innerHTML = '<option value="">カードを選択</option>' +
+    filtered.map(c => `
+      <option value="${c["カード番号"]}"
+              data-name="${c["カード名"]||""}"
+              data-ki="${c["気力"]||0}"
+              data-type="${c["バトルタイプ"]||""}"
+              data-hp="${c["HP"]||0}">
+        ${c["カード番号"]||""} ${c["カード名"]||""}
+      </option>
+    `).join("");
+
+  // 選択維持（同じ値がリストにあれば残す）
+  const prev = select.getAttribute("data-prev");
+  if(prev){
+    const opt = [...select.options].find(o=>o.value===prev);
+    if(opt) select.value = prev;
+  }
+  // 状態更新
+  updateCardStatus(i, /*noRecalc*/ true);
+  calcPower();
+}
+function filterByName(i){ updateCardOptions(i); }
+
+/* ===== 選択状態の反映（背景・表示・重複チェック連携） ===== */
+function updateCardStatus(i, noRecalc=false){
+  const sel = document.getElementById(`card${i}`);
+  const title = document.getElementById(`cardTitle${i}`);
+  const box = document.getElementById(`cardDiv${i}`);
+  const status = document.getElementById(`status${i}`);
+  const power  = document.getElementById(`power${i}`);
+
+  // 選択値を記憶（フィルタ更新時の維持用）
+  sel.setAttribute("data-prev", sel.value || "");
+
+  if(!sel.value){
+    title.textContent = `カード${i}`;
+    status.textContent = "";
+    power.textContent  = "";
+    box.className = "card-box";
+    if(!noRecalc){ checkDuplicates(); calcPower(); }
+    return;
+  }
+  const opt  = sel.selectedOptions[0];
+  const name = opt.dataset.name || `カード${i}`;
+  const type = opt.dataset.type || "";
+  const ki   = parseFloat(opt.dataset.ki || 0);
+  const hp   = parseInt(opt.dataset.hp || 0);
+
+  title.textContent = name;
+  // 背景（タイプ）
+  box.className = "card-box";
+  box.classList.add(`bg-${type}`);
+
+  status.textContent = `HP: ${hp} ／ 気力: ${ki}`;
+  let p = ki * 2500;
+  if(type === "ブースト") p *= 1.5;
+  power.textContent = `戦闘力: ${Math.round(p)}`;
+
+  if(!noRecalc){ checkDuplicates(); calcPower(); }
+}
+
+/* ===== 重複強調（赤枠＋メッセージ） ===== */
+function checkDuplicates(){
+  const seen = new Map(); // 番号 => [i...]
+  for(let i=1;i<=7;i++){
+    const sel = document.getElementById(`card${i}`);
+    const box = document.getElementById(`cardDiv${i}`);
+    box.classList.remove("duplicate");
+    if(sel.value){
+      if(!seen.has(sel.value)) seen.set(sel.value, []);
+      seen.get(sel.value).push(i);
+    }
+  }
+  let dup = false;
+  for(const [_, idxs] of seen){
+    if(idxs.length > 1){
+      dup = true;
+      idxs.forEach(i => document.getElementById(`cardDiv${i}`).classList.add("duplicate"));
+    }
+  }
+  document.getElementById("errorMsg").textContent = dup ? "⚠ 同じカードが選択されています。別のカードを選択してください。" : "";
+}
+
+/* ===== 合計計算＋内訳（シンプルテキスト） ===== */
+function calcPower(){
+  let totalPower = 0;
+  let totalHP    = 0;
+  const lines = [];
+
+  // アバター
+  const aKi   = parseFloat(document.getElementById("avatarKi").value) || 0;
+  const aType = document.getElementById("avatarType").value;
+  const aHP   = parseInt(document.getElementById("avatarHP").value) || 0;
+  let aPow = aKi * 2500;
+  if(aType === "ブースト") aPow *= 1.5;
+  totalPower += aPow; totalHP += aHP;
+  document.getElementById("avatarPower").textContent = `戦闘力: ${Math.round(aPow)}`;
+  lines.push(`アバター（${aType}）: 戦闘力 ${Math.round(aPow)} ／ HP ${aHP}`);
+
+  // 7枚
+  for(let i=1;i<=7;i++){
+    const sel = document.getElementById(`card${i}`);
+    if(!sel || !sel.value) continue;
+    const opt  = sel.selectedOptions[0];
+    const name = opt.dataset.name || `カード${i}`;
+    const type = opt.dataset.type || "";
+    const ki   = parseFloat(opt.dataset.ki || 0);
+    const hp   = parseInt(opt.dataset.hp || 0);
+
+    let pow = ki * 2500;
+    if(type === "ブースト") pow *= 1.5;
+
+    totalPower += pow;
+    totalHP    += hp;
+
+    lines.push(`${name}（${type}）: 戦闘力 ${Math.round(pow)} ／ HP ${hp}`);
+  }
+
+  // 反映
+  document.getElementById("resultPower").textContent = `合計戦闘力: ${Math.round(totalPower)}`;
+  document.getElementById("resultHP").textContent    = `合計HP: ${Math.round(totalHP)}`;
+  document.getElementById("breakdown").textContent   = lines.join("\n");
+}
+
+/* ===== 起動 ===== */
+window.onload = () => { createSelects(); calcPower(); };
+</script>
+</body>
+</html>
