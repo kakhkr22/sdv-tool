@@ -161,6 +161,10 @@ mark {
   <label>キーワード:
     <input type="text" id="keyword" placeholder="名前・スキル・番号など">
   </label>
+  <label>
+    <input type="checkbox" id="nameOnly">
+    カード名のみ
+  </label>
   <label>収録弾:
     <select id="series">
       <option value="">全て</option>
@@ -201,13 +205,16 @@ mark {
       <option value="気弾">気弾</option>
     </select>
   </label>
-  <label>状態:
+  <label>変身状態:
     <input type="text" id="transform" placeholder="例: 通常">
   </label>
-  <label>状態（覚醒後）:
+  <label>変身状態（覚醒後）:
     <input type="text" id="transform2" placeholder="例: 超サイヤ人">
   </label>
-  <label>気力:
+
+ 
+   <div class="filter-row">
+     <label>気力:
     <select id="ki">
       <option value="">全て</option>
       <option value="2">2以上</option>
@@ -228,10 +235,8 @@ mark {
       <option value="12">12</option>
     </select>
   </label>
- <div>
- 
- 
-   <div class="filter-row">
+  
+  </div>
     <button id="searchBtn">検索</button>
     <button id="clearBtn">クリア</button>
   </div>
@@ -319,58 +324,74 @@ function displayCards(cards, keyword=""){
   });
 }
 
-// 絞り込み処理
+// 全角半角・大文字小文字を無視するための共通関数（安全版）
+function normalizeText(str) {
+  if (str === null || str === undefined) return "";
+  // 数値やオブジェクトも安全に文字列化
+  return String(str).normalize("NFKC").toLowerCase();
+}
+
+
 function applyFilters() {
-  const kw = document.getElementById("keyword").value.trim().toLowerCase();
-  const series = document.getElementById("series").value;
-  const rarity = document.getElementById("rarity").value;
-  const bt = document.getElementById("battleType").value;
-  const as = document.getElementById("attackStyle").value;
-  const tf1 = document.getElementById("transform").value.trim().toLowerCase();
-  const tf2 = document.getElementById("transform2").value.trim().toLowerCase();
-  const ki = document.getElementById("ki").value;
-  const en = document.getElementById("energy").value;
+  const kw = normalizeText(document.getElementById("keyword")?.value.trim() || "");
+  const series = document.getElementById("series")?.value || "";
+  const rarity = document.getElementById("rarity")?.value || "";
+  const bt = document.getElementById("battleType")?.value || "";
+  const as = document.getElementById("attackStyle")?.value || "";
+  const tf1 = normalizeText(document.getElementById("transform")?.value.trim() || "");
+  const tf2 = normalizeText(document.getElementById("transform2")?.value.trim() || "");
+  const ki = document.getElementById("ki")?.value || "";
+  const en = document.getElementById("energy")?.value || "";
+  const nameOnly = document.getElementById("nameOnly")?.checked;
 
   let filtered = allCardsData.filter(c => {
-    if (kw && !Object.values(c).some(v => v && v.toString().toLowerCase().includes(kw))) return false;
-    if (series && getSeriesNumber(c["カード番号"]) !== Number(series)) return false;
-    if (rarity && c["レアリティ"] !== rarity) return false;
-    if (bt && c["バトルタイプ"] !== bt) return false;
-    if (as && c["攻撃スタイル"] !== as) return false;
-    if (tf1 && !(c["変身状態"] || "").toLowerCase().includes(tf1)) return false;
-    if (tf2 && !(c["変身状態（覚醒後）"] || "").toLowerCase().includes(tf2)) return false;
-    if (ki && Number(c["気力"]) < Number(ki)) return false;
+    // 🔍 キーワード検索
+if (kw) {
+  // スペースで分割（全角スペースも対応）
+  const keywords = kw.split(/[\s\u3000]+/).filter(k => k);
 
-// 🔹 エナジー条件（完全対応版）
-if (en) {
-  const energyRaw = c["エナジー"] ? c["エナジー"].toString() : "";
-  const normalized = energyRaw
-    .trim()
-    .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248)) // 全角→半角
-    .replace(/[^\d~以上]/g, ""); // 「以上」を残す
-
-  const numEn = parseInt(en);
-  const match = (() => {
-    if (!normalized) return false;
-    if (normalized.includes("~")) {
-      const [min, max] = normalized.split("~").map(v => parseInt(v));
-      return numEn >= min && numEn <= max;
-    }
-    if (normalized.includes("以上")) {
-      const base = parseInt(normalized.replace("以上", ""));
-      return numEn >= base;
-    }
-    const energyNum = parseInt(normalized);
-    if (isNaN(energyNum)) return false;
-    return energyNum === numEn;
-  })();
-
-  if (!match) return false;
+  if (nameOnly) {
+    // カード名だけ検索
+    const nameText = normalizeText(c["カード名"]);
+    // 全キーワードを含むか判定
+    if (!keywords.every(k => nameText.includes(k))) return false;
+  } else {
+    // URLなど除外して全体検索
+    const values = Object.entries(c)
+      .filter(([key]) => !["URL", "画像", "リンク"].includes(key))
+      .map(([_, v]) => normalizeText(v))
+      .join(" ");
+    
+    // すべてのキーワードを含むか判定
+    if (!keywords.every(k => values.includes(k))) return false;
+  }
 }
 
 
 
-    return true; // ✅ ← ここが大事！
+    // 🔹 他の条件
+    if (series && getSeriesNumber(c["カード番号"]) !== Number(series)) return false;
+    if (rarity && normalizeText(c["レアリティ"]) !== normalizeText(rarity)) return false;
+    if (bt && normalizeText(c["バトルタイプ"]) !== normalizeText(bt)) return false;
+    if (as && normalizeText(c["攻撃スタイル"]) !== normalizeText(as)) return false;
+    if (tf1 && !normalizeText(c["変身状態"]).includes(tf1)) return false;
+    if (tf2 && !normalizeText(c["変身状態（覚醒後）"]).includes(tf2)) return false;
+
+    // ⚡ 気力
+    if (ki) {
+      const kiRaw = c["気力"] ? Number(c["気力"]) : 0;
+      const numKi = Number(ki);
+      if (!isNaN(numKi) && kiRaw < numKi) return false;
+    }
+
+    // ⚡ エナジー
+if (en) {
+  const energyRaw = Number(c["エナジー"]) || 0;
+  const numEn = Number(en);
+  if (!isNaN(numEn) && energyRaw !== numEn) return false;
+}
+
+    return true;
   });
 
   displayCards(filtered, kw);
