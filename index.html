@@ -168,12 +168,14 @@ mark {
   <label>収録弾:
     <select id="series">
       <option value="">全て</option>
+      <option value="0">ロケーションテスト</option>
       <option value="1">1弾</option>
       <option value="2">2弾</option>
       <option value="3">3弾</option>
       <option value="4">4弾</option>
       <option value="5">5弾</option>
       <option value="6">6弾</option>
+      <option value="PR">プロモーション</option>
     </select>
   </label>
   <label>レアリティ:
@@ -250,13 +252,14 @@ mark {
 </footer>
 
 <!-- 各弾のデータ読み込み -->
+<script src="cardtest.js"></script>
 <script src="card1.js"></script>
 <script src="card2.js"></script>
 <script src="card3.js"></script>
 <script src="card4.js"></script>
 <script src="card5.js"></script>
 <script src="card6.js"></script>
-
+<script src="cardpr.js"></script>
 <script>
 let allCardsData = [];
 
@@ -264,12 +267,14 @@ window.onload = () => {
   // 全カード統合
   allCardsData = []
     .concat(
+      (typeof cardDatatest!=="undefined"?cardDatatest:[]),
       (typeof cardData1!=="undefined"?cardData1:[]),
       (typeof cardData2!=="undefined"?cardData2:[]),
       (typeof cardData3!=="undefined"?cardData3:[]),
       (typeof cardData4!=="undefined"?cardData4:[]),
       (typeof cardData5!=="undefined"?cardData5:[]),
-      (typeof cardData6!=="undefined"?cardData6:[])
+      (typeof cardData6!=="undefined"?cardData6:[]),
+      (typeof cardDatapr!=="undefined"?cardDatapr:[])
     );
   displayCards(allCardsData);
   document.getElementById("searchBtn").onclick = applyFilters;
@@ -281,21 +286,44 @@ window.onload = () => {
 function getSeriesNumber(cardNo){
   if(!cardNo) return null;
   const s = cardNo.toUpperCase();
+  if(s.startsWith("TEST")) return 0;
   if(s.startsWith("SDV1")||s.startsWith("EX1")) return 1;
   if(s.startsWith("SDV2")||s.startsWith("EX2")) return 2;
   if(s.startsWith("SDV3")||s.startsWith("EX3")) return 3;
   if(s.startsWith("SDV4")||s.startsWith("EX4")) return 4;
   if(s.startsWith("SDV5")||s.startsWith("EX5")) return 5;
   if(s.startsWith("SDV6")||s.startsWith("EX6")) return 6;
+  if(s.startsWith("SDVP")||s.startsWith("SDVE")||s.startsWith("SDVF")||s.startsWith("AP")||s.startsWith("SDVBS")||s.startsWith("SDVSV")||s.startsWith("SDVPJ")||s.startsWith("SDVTP")||s.startsWith("AP2")||s.startsWith("SDVBS")) return "PR";
   return null;
 }
 
-// ハイライト関数
-function highlightText(text, keyword){
-  if(!keyword || keyword.length < 2) return text;
-  const regex = new RegExp(keyword, "gi");
-  return text.replace(regex, match => `<mark>${match}</mark>`);
+function highlightText(text, keyword) {
+  if (!text) return "";
+  if (!keyword || keyword.trim().length < 1) return text;
+
+  // 複数キーワード対応（スペース・全角スペースで分割）
+  const keywords = keyword
+    .split(/[^\S\u3000]+/)      // 半角/全角スペースで分割
+    .map(k => k.trim())
+    .filter(k => k.length > 0);
+
+  let result = text;
+
+  keywords.forEach(k => {
+    try {
+      const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // 正規表現エスケープ
+      const regex   = new RegExp(escaped, "gi");
+      result = result.replace(regex, match => `<mark>${match}</mark>`);
+    } catch (e) {
+      console.error("Regex error:", e);
+    }
+  });
+
+  return result;   // ← この1個だけでOK（外に return を書かない）
 }
+
+
+
 
 // カード表示
 function displayCards(cards, keyword=""){
