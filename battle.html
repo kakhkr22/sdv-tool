@@ -227,18 +227,19 @@ select, input[type="text"], input[type="number"] {
 <!-- 3段目（3枚） -->
 <div id="row2" class="card-grid"></div>
 
-<script src="card.js"></script>
 <script>
 /* ===== ユーティリティ ===== */
 function getSeriesNumber(cardNo){
   if(!cardNo) return null;
   const s = cardNo.toUpperCase();
+  if(s.startsWith("TEST")) return 0;
   if(s.startsWith("SDV1")||s.startsWith("EX1")) return 1;
   if(s.startsWith("SDV2")||s.startsWith("EX2")) return 2;
   if(s.startsWith("SDV3")||s.startsWith("EX3")) return 3;
   if(s.startsWith("SDV4")||s.startsWith("EX4")) return 4;
   if(s.startsWith("SDV5")||s.startsWith("EX5")) return 5;
   if(s.startsWith("SDV6")||s.startsWith("EX6")) return 6;
+  if(s.startsWith("SDVP")||s.startsWith("SDVE")||s.startsWith("SDVF")||s.startsWith("AP")||s.startsWith("SDVBS")||s.startsWith("SDVSV")||s.startsWith("SDVPJ")||s.startsWith("SDVTP")||s.startsWith("AP2")||s.startsWith("SDVBS")) return "PR";
   return null;
 }
 function changeBg(type, id){
@@ -259,11 +260,19 @@ function createSelects(){
     box.innerHTML = `
       <h4 id="cardTitle${i}">カード${i}</h4>
 
-      <label>弾数</label>
-      <select id="series${i}" onchange="updateCardOptions(${i})">
-        <option value="">全て</option>
-        ${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n}弾</option>`).join('')}
-      </select>
+  <label>収録弾:
+    <select id="series${i}">
+      <option value="">全て</option>
+      <option value="0">ロケーションテスト</option>
+      <option value="1">1弾</option>
+      <option value="2">2弾</option>
+      <option value="3">3弾</option>
+      <option value="4">4弾</option>
+      <option value="5">5弾</option>
+      <option value="6">6弾</option>
+      <option value="PR">プロモーション</option>
+    </select>
+  </label>
 
       <label>バトルタイプ</label>
       <select id="type${i}" onchange="updateCardOptions(${i})">
@@ -296,7 +305,7 @@ function updateCardOptions(i){
 
   let filtered = allCardsData.filter(c=>{
     const sn = getSeriesNumber(c["カード番号"]);
-    if(s && sn !== Number(s)) return false;
+    if(s && sn != s) return false;
     if(t && c["バトルタイプ"] !== t) return false;
     if(keyword){
       const k = keyword;
@@ -435,27 +444,28 @@ function calcPower(){
 window.onload = () => { createSelects(); calcPower(); };
 </script>
 <!-- ===== カードデータ読込順を修正 ===== -->
+<script src="cardtest.js"></script>
 <script src="card1.js"></script>
 <script src="card2.js"></script>
 <script src="card3.js"></script>
 <script src="card4.js"></script>
 <script src="card5.js"></script>
 <script src="card6.js"></script>
-
+<script src="cardpr.js"></script>
 <script>
   const allCardsData = [
+    ...(typeof cardDatatest !== 'undefined'? cardDatatest : []),
     ...(typeof cardData1 !== 'undefined' ? cardData1 : []),
     ...(typeof cardData2 !== 'undefined' ? cardData2 : []),
     ...(typeof cardData3 !== 'undefined' ? cardData3 : []),
     ...(typeof cardData4 !== 'undefined' ? cardData4 : []),
     ...(typeof cardData5 !== 'undefined' ? cardData5 : []),
     ...(typeof cardData6 !== 'undefined' ? cardData6 : []),
+    ...(typeof cardDatapr !== 'undefined'? cardDatapr : [])
   ];
   window.allCardsData = allCardsData;
 </script>
 
-<!-- ===== メイン処理を最後に実行 ===== -->
-<script src="main.js"></script>
 </body>
 </html>
 
