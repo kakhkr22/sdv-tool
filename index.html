@@ -175,6 +175,7 @@ mark {
       <option value="4">4弾</option>
       <option value="5">5弾</option>
       <option value="6">6弾</option>
+      <option value="7">7弾</option>
       <option value="PR">プロモーション</option>
     </select>
   </label>
@@ -259,6 +260,7 @@ mark {
 <script src="card4.js"></script>
 <script src="card5.js"></script>
 <script src="card6.js"></script>
+<script src="card7.js"></script>
 <script src="cardpr.js"></script>
 <script>
 let allCardsData = [];
@@ -274,6 +276,7 @@ window.onload = () => {
       (typeof cardData4!=="undefined"?cardData4:[]),
       (typeof cardData5!=="undefined"?cardData5:[]),
       (typeof cardData6!=="undefined"?cardData6:[]),
+      (typeof cardData7!=="undefined"?cardData7:[]),
       (typeof cardDatapr!=="undefined"?cardDatapr:[])
     );
   displayCards(allCardsData);
@@ -293,7 +296,8 @@ function getSeriesNumber(cardNo){
   if(s.startsWith("SDV4")||s.startsWith("EX4")) return 4;
   if(s.startsWith("SDV5")||s.startsWith("EX5")) return 5;
   if(s.startsWith("SDV6")||s.startsWith("EX6")) return 6;
-  if(s.startsWith("SDVP")||s.startsWith("SDVE")||s.startsWith("SDVF")||s.startsWith("AP")||s.startsWith("SDVBS")||s.startsWith("SDVSV")||s.startsWith("SDVPJ")||s.startsWith("SDVTP")||s.startsWith("AP2")||s.startsWith("SDVBS")) return "PR";
+  if(s.startsWith("SDV7")||s.startsWith("EX7")) return 7;
+  if(s.startsWith("SDVP")||s.startsWith("SDVE")||s.startsWith("SDVF")||s.startsWith("AP")||s.startsWith("SDVBS")||s.startsWith("SDVSV")||s.startsWith("SDVPJ")||s.startsWith("SDVTP")||s.startsWith("AP2")||s.startsWith("SDVBS")||s.startsWith("SDVZV")||s.startsWith("SDVTD")||s.startsWith("SDVTB")) return "PR";
   return null;
 }
 
@@ -398,7 +402,15 @@ if (kw) {
 
 
     // 🔹 他の条件
-    if (series && getSeriesNumber(c["カード番号"]) !== Number(series)) return false;
+    const cardSeries = getSeriesNumber(c["カード番号"]);
+
+if (series) {
+  if (series === "PR") {
+    if (cardSeries !== "PR") return false;
+  } else {
+    if (cardSeries !== Number(series)) return false;
+  }
+}
     if (rarity && normalizeText(c["レアリティ"]) !== normalizeText(rarity)) return false;
     if (bt && normalizeText(c["バトルタイプ"]) !== normalizeText(bt)) return false;
     if (as && normalizeText(c["攻撃スタイル"]) !== normalizeText(as)) return false;
