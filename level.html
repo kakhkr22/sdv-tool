@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>師弟リスト</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  background: linear-gradient(135deg, #d8f0ff, #eef8ff);
+  font-family: "Poppins", "Noto Sans JP", sans-serif;
+  margin:0; padding:20px;
+}
+.container {
+  max-width:900px; margin:auto;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(8px);
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 6px 20px rgba(120,170,255,0.25);
+}
+h1{
+  text-align:center;
+  color:#444; 
+  font-size:30px;
+  font-weight:800;
+  text-shadow:none;
+}
+.cute-blue-link{
+  display:inline-block;background:#e3f2fd;color:#1976d2;
+  padding:8px 18px;border-radius:25px;text-decoration:none;
+  font-weight:600;transition:.25s;
+  box-shadow:0 2px 6px rgba(33,150,243,.25);
+}
+.cute-blue-link:hover{
+  background:#bbdefb;color:#fff;
+  box-shadow:0 3px 10px rgba(33,150,243,.4);
+  transform:scale(1.05);
+}
+
+/* PC table */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:separate; border-spacing:0 10px; }
+th {
+  background:#7dc8ff;color:white;padding:10px;font-size:13px;
+  border-radius:12px;cursor:pointer;
+}
+td {
+  background:#fff;padding:12px;border-radius:12px;
+  box-shadow:0 3px 6px rgba(0,0,0,.07);font-size:14px;
+}
+tr:hover td { background:#e3f4ff; }
+td:first-child { text-align:right;color:#4da3ff;font-weight:bold; }
+td:nth-child(2){ font-weight:600; }
+th.sort-asc::after{content:" ↑";}
+th.sort-desc::after{content:" ↓";}
+
+/* mobile cards */
+.card-list{ display:none; }
+.card{
+  background:white;margin-bottom:14px;border-radius:16px;
+  padding:14px;box-shadow:0 3px 10px rgba(0,0,0,.1);
+}
+.card-row{ margin:6px 0; }
+.card-label{ font-size:12px;color:#1976d2;font-weight:600; }
+.card-value{ font-size:15px;font-weight:600; }
+
+@media(max-width:700px){
+  table{ display:none; }
+  .card-list{ display:block; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>師弟リスト</h1>
+
+  <p style="text-align:center;margin-bottom:18px;">
+    <a href="index.html" class="cute-blue-link">← カード検索へ</a>
+    &nbsp;&nbsp;
+    <a href="battle.html" class="cute-blue-link">戦闘力計算へ →</a>
+  </p>
+
+  <div class="table-wrap">
+    <table id="table">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="card-list" id="cardList"></div>
+</div>
+
+<script src="levelData.js"></script>
+<script>
+function transformData(data){
+  return data.map(item=>({
+    "番号":item["番号"],
+    "キャラクター名":item["fullName"],
+    "初収録弾":item["初収録弾"],
+    "MAX LV.":item["MAX LV."]
+  }));
+}
+let tableData = transformData(levelData);
+
+let sortState={};
+function renderTable(data){
+  const thead=document.getElementById("thead");
+  const tbody=document.getElementById("tbody");
+  thead.innerHTML=""; tbody.innerHTML="";
+  const headerRow=document.createElement("tr");
+  Object.keys(data[0]).forEach(col=>{
+    const th=document.createElement("th");
+    th.textContent=col; th.dataset.col=col;
+    th.onclick=()=>sortBy(col, th);
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  data.forEach(row=>{
+    const tr=document.createElement("tr");
+    Object.values(row).forEach(val=>{
+      const td=document.createElement("td");
+      td.textContent=val;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+function sortBy(col, th){
+  const asc=!sortState[col];
+  sortState={ [col]:asc };
+  document.querySelectorAll("th").forEach(h=>h.classList.remove("sort-asc","sort-desc"));
+  th.classList.add(asc?"sort-asc":"sort-desc");
+  const sorted=[...tableData].sort((a,b)=>{
+    const x=a[col], y=b[col];
+    const nx=parseFloat(x), ny=parseFloat(y);
+    if(!isNaN(nx)&&!isNaN(ny)) return asc?nx-ny:ny-nx;
+    return asc?String(x).localeCompare(String(y)):String(y).localeCompare(String(x));
+  });
+  renderTable(sorted);
+}
+function renderCards(data){
+  const wrap=document.getElementById("cardList");
+  wrap.innerHTML="";
+  data.forEach(row=>{
+    const card=document.createElement("div");
+    card.className="card";
+    for(let key in row){
+      const line=document.createElement("div");
+      line.className="card-row";
+      line.innerHTML=`<span class="card-label">${key}：</span>
+                      <span class="card-value">${row[key]}</span>`;
+      card.appendChild(line);
+    }
+    wrap.appendChild(card);
+  });
+}
+renderTable(tableData);
+renderCards(tableData);
+</script>
+</body>
+</html>
