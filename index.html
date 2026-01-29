@@ -178,6 +178,7 @@ mark {
       <option value="5">5弾</option>
       <option value="6">6弾</option>
       <option value="7">7弾</option>
+      <option value="8">8弾</option>
       <option value="PR">プロモーション</option>
     </select>
   </label>
@@ -263,6 +264,7 @@ mark {
 <script src="card5.js"></script>
 <script src="card6.js"></script>
 <script src="card7.js"></script>
+<script src="card8.js"></script>
 <script src="cardpr.js"></script>
 <script>
 let allCardsData = [];
@@ -279,6 +281,7 @@ window.onload = () => {
       (typeof cardData5!=="undefined"?cardData5:[]),
       (typeof cardData6!=="undefined"?cardData6:[]),
       (typeof cardData7!=="undefined"?cardData7:[]),
+      (typeof cardData8!=="undefined"?cardData8:[]),
       (typeof cardDatapr!=="undefined"?cardDatapr:[])
     );
   displayCards(allCardsData);
@@ -299,7 +302,8 @@ function getSeriesNumber(cardNo){
   if(s.startsWith("SDV5")||s.startsWith("EX5")) return 5;
   if(s.startsWith("SDV6")||s.startsWith("EX6")) return 6;
   if(s.startsWith("SDV7")||s.startsWith("EX7")) return 7;
-  if(s.startsWith("SDVP")||s.startsWith("SDVE")||s.startsWith("SDVF")||s.startsWith("AP")||s.startsWith("SDVBS")||s.startsWith("SDVSV")||s.startsWith("SDVPJ")||s.startsWith("SDVTP")||s.startsWith("AP2")||s.startsWith("SDVBS")||s.startsWith("SDVZV")||s.startsWith("SDVTD")||s.startsWith("SDVTB")||s.startsWith("SDVA")) return "PR";
+  if(s.startsWith("SDV8")||s.startsWith("EX8")) return 8;
+  if(s.startsWith("SDVP")||s.startsWith("SDVE")||s.startsWith("SDVF")||s.startsWith("AP")||s.startsWith("SDVBS")||s.startsWith("SDVSV")||s.startsWith("SDVPJ")||s.startsWith("SDVTP")||s.startsWith("AP2")||s.startsWith("SDVBS")||s.startsWith("SDVZV")||s.startsWith("SDVTD")||s.startsWith("SDVTB")||s.startsWith("SDVA")||s.startsWith("SDVZS")) return "PR";
   return null;
 }
 
